@@ -5,6 +5,25 @@
 [build.environment]
   NODE_VERSION = "20"
 
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/create-order"
+  to = "/.netlify/functions/create-order"
+  status = 200
+
+[[redirects]]
+  from = "/api/orders"
+  to = "/.netlify/functions/get-orders"
+  status = 200
+
+[[redirects]]
+  from = "/api/orders/:id"
+  to = "/.netlify/functions/get-order?id=:id"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
