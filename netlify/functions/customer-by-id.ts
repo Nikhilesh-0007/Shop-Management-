@@ -28,6 +28,13 @@ export const handler: Handler = async (event) => {
 
   if (event.httpMethod === "DELETE") {
     try {
+      // Delete child records first to avoid foreign key constraint errors
+      const { data: orders } = await supabase.from("orders").select("id").eq("customer_id", id);
+      if (orders && orders.length > 0) {
+        const orderIds = orders.map((o) => o.id);
+        await supabase.from("order_items").delete().in("order_id", orderIds);
+        await supabase.from("orders").delete().eq("customer_id", id);
+      }
       const { error } = await supabase.from("customers").delete().eq("id", id);
       if (error) throw error;
       return { statusCode: 200, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ success: true }) };
