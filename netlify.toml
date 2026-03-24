@@ -9,7 +9,6 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
-# Orders
 [[redirects]]
   from = "/api/create-order"
   to = "/.netlify/functions/create-order"
@@ -20,29 +19,24 @@
   to = "/.netlify/functions/get-orders"
   status = 200
 
+# MUST be before /api/orders/:id to avoid :id catching "5/print"
 [[redirects]]
   from = "/api/orders/:id/print"
   to = "/.netlify/functions/print-order?id=:id"
   status = 200
 
+# Handles both GET and PUT
 [[redirects]]
   from = "/api/orders/:id"
-  to = "/.netlify/functions/get-order?id=:id"
+  to = "/.netlify/functions/order-by-id?id=:id"
   status = 200
 
-[[redirects]]
-  from = "/api/orders/:id"
-  to = "/.netlify/functions/update-order?id=:id"
-  status = 200
-  force = true
-  conditions = {Method = ["PUT"]}
-
-# Customers
 [[redirects]]
   from = "/api/customers"
   to = "/.netlify/functions/get-customers"
   status = 200
 
+# MUST be before /api/customers/:id to avoid :id catching "5/orders"
 [[redirects]]
   from = "/api/customers/:id/orders"
   to = "/.netlify/functions/customer-orders?id=:id"
@@ -53,7 +47,7 @@
   to = "/.netlify/functions/customer-by-id?id=:id"
   status = 200
 
-# SPA fallback
+# SPA fallback - must be last
 [[redirects]]
   from = "/*"
   to = "/index.html"
