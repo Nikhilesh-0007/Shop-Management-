@@ -13,7 +13,7 @@ export default function AdminLayout({ children, onLogout }) {
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
-    onLogout();
+    window.location.href = '/';
   };
 
   const currentPage = menuItems.find(item => item.path === location);

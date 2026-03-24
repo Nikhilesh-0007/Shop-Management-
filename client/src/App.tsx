@@ -55,6 +55,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
     setIsLoggedIn(false);
+    window.location.href = '/';
   };
 
   if (loading) {
