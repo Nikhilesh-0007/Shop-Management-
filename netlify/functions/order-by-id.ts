@@ -7,7 +7,11 @@ const supabase = createClient(
 );
 
 export const handler: Handler = async (event) => {
-  const id = parseInt(event.queryStringParameters?.id || "");
+  let id = parseInt(event.queryStringParameters?.id || "");
+  if (isNaN(id)) {
+    const match = event.path.match(/\/api\/orders\/(\d+)/);
+    if (match) id = parseInt(match[1]);
+  }
   if (isNaN(id)) return { statusCode: 400, body: JSON.stringify({ message: "Invalid order ID" }) };
 
   // GET - fetch order with items

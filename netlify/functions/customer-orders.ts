@@ -9,7 +9,12 @@ const supabase = createClient(
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== "GET") return { statusCode: 405, body: "Method Not Allowed" };
 
-  const id = parseInt(event.queryStringParameters?.id || "");
+  // Extract id from query string or from path /api/customers/28/orders
+  let id = parseInt(event.queryStringParameters?.id || "");
+  if (isNaN(id)) {
+    const match = event.path.match(/\/api\/customers\/(\d+)\/orders/);
+    if (match) id = parseInt(match[1]);
+  }
   if (isNaN(id)) return { statusCode: 400, body: JSON.stringify({ message: "Invalid customer ID" }) };
 
   try {
