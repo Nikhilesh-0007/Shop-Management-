@@ -10,4 +10,14 @@ export default defineConfig({
       "@shared": path.resolve(__dirname, "../shared"),
     },
   },
+  css: {
+    postcss: {
+      from: undefined,
+    },
+  },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    outDir: path.resolve(__dirname, "dist"),
+    emptyOutDir: true,
+  },
 })
