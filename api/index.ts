@@ -7,6 +7,11 @@ import { fromZodError } from "zod-validation-error";
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Missing Supabase env vars:', { supabaseUrl: !!supabaseUrl, supabaseKey: !!supabaseKey });
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const app = express();
@@ -248,6 +253,9 @@ app.get("/api/orders", async (req, res) => {
 
 app.get("/api/customers", async (req, res) => {
   try {
+    if (!supabaseUrl || !supabaseKey) {
+      return res.status(500).json({ success: false, message: "Missing Supabase configuration. Check environment variables." });
+    }
     const { data, error } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
     if (error) throw error;
     return res.json({ success: true, customers: data });
