@@ -160,7 +160,7 @@ export default function CustomerList() {
                 ...c,
                 orders,
                 orderCount: orders.length,
-                totalSpent: orders.reduce((s, o) => s + o.totalAmount, 0),
+                totalSpent: orders.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0),
               }
             : c
         )
@@ -396,7 +396,7 @@ export default function CustomerList() {
                     <span className="flex items-center gap-1 text-blue-600 font-medium"><Package className="h-3.5 w-3.5" />{customer.orderCount} orders</span>
                   )}
                   {customer.totalSpent !== undefined && (
-                    <span className="flex items-center gap-1 text-green-600 font-medium"><IndianRupee className="h-3.5 w-3.5" />{customer.totalSpent.toFixed(2)} spent</span>
+                    <span className="flex items-center gap-1 text-green-600 font-medium"><IndianRupee className="h-3.5 w-3.5" />{(Number(customer.totalSpent) || 0).toFixed(2)} spent</span>
                   )}
                 </div>
 
@@ -417,7 +417,7 @@ export default function CustomerList() {
                             <div>
                               <p className="text-sm font-medium text-gray-800">Order #{order.id}</p>
                               <p className="text-xs text-gray-500">
-                                {new Date(order.orderDate).toLocaleDateString()} · ₹{order.totalAmount.toFixed(2)}
+                                {new Date(order.orderDate).toLocaleDateString()} · ₹{(Number(order.totalAmount) || 0).toFixed(2)}
                               </p>
                             </div>
                             <div className="flex items-center gap-1">
