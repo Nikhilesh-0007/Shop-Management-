@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Customer, Order, OrderItemRecord, CreateOrderInput } from "../shared/schema";
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://csniddtrkxtwxnlpwrly.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzbmlkZHRya3h0d3hubHB3cmx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5NTk1NTAsImV4cCI6MjA4NTUzNTU1MH0.40JvnW6i3xQrF2Sx_F7QabhRYIT6tl3RLUKmlPyjmv0';
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://nosrrummadjqjbyuonsj.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vc3JydW1tYWRqcWpieXVvbnNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzEwNTQsImV4cCI6MjA5MDAwNzA1NH0.gIKdZod2nZnCmq12t5f7Z_5OxU8xVUH2LxzkmqBmXzo';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -19,6 +19,7 @@ export interface IDatabase {
   getOrderWithItems(id: number): Promise<{ order: Order; customer: Customer; items: OrderItemRecord[] } | undefined>;
   getOrdersByCustomerId(id: number): Promise<Order[]>;
   updateOrder(id: number, input: CreateOrderInput): Promise<void>;
+  deleteOrder(id: number): Promise<void>;
   getAllOrders(): Promise<Order[]>;
 }
 
@@ -176,6 +177,20 @@ class SupabaseDatabase implements IDatabase {
     console.log(`[DB] Order #${orderId} PDF generated: ${pdfPath}`);
   }
 
+  async deleteOrder(id: number): Promise<void> {
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .delete()
+      .eq('order_id', id);
+    if (itemsError) throw itemsError;
+
+    const { error } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  }
+
   async getAllOrders(): Promise<Order[]> {
     const { data, error } = await supabase
       .from('orders')
@@ -220,11 +235,34 @@ class SupabaseDatabase implements IDatabase {
   }
 
   async deleteCustomer(id: number): Promise<void> {
+    // First get all orders for this customer
+    const { data: orders } = await supabase
+      .from('orders')
+      .select('id')
+      .eq('customer_id', id);
+
+    // Delete order_items for each order
+    if (orders && orders.length > 0) {
+      const orderIds = orders.map(o => o.id);
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .delete()
+        .in('order_id', orderIds);
+      if (itemsError) throw itemsError;
+    }
+
+    // Delete orders
+    const { error: ordersError } = await supabase
+      .from('orders')
+      .delete()
+      .eq('customer_id', id);
+    if (ordersError) throw ordersError;
+
+    // Delete customer
     const { error } = await supabase
       .from('customers')
       .delete()
       .eq('id', id);
-
     if (error) throw error;
   }
 

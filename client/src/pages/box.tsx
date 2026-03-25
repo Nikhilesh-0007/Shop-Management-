@@ -159,7 +159,7 @@ export default function BoxOrders() {
                 name="items.0.length"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Length (cm)</FormLabel>
+                    <FormLabel>Length (in)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -178,7 +178,7 @@ export default function BoxOrders() {
                 name="items.0.breadth"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Breadth (cm)</FormLabel>
+                    <FormLabel>Breadth (in)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -197,7 +197,7 @@ export default function BoxOrders() {
                 name="items.0.height"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Height (cm)</FormLabel>
+                    <FormLabel>Height (in)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"

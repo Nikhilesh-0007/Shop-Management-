@@ -76,6 +76,7 @@ interface OrderItem {
   envelopePrintType?: string;
   envelopePrintMethod?: string;
   envelopeCustomPrint?: string;
+  envelopeColor?: string;
   envelopeHeight?: number;
   envelopeWidth?: number;
   // bag
@@ -124,8 +125,8 @@ export default function CustomerList() {
   const [editPhone, setEditPhone] = useState("");
   const [editLoading, setEditLoading] = useState(false);
 
-  const [deleteCustomer, setDeleteCustomer] = useState<Customer | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteOrderId, setDeleteOrderId] = useState<number | null>(null);
+  const [deleteOrderLoading, setDeleteOrderLoading] = useState(false);
 
   const [editOrder, setEditOrder] = useState<Order | null>(null);
   const [editOrderItems, setEditOrderItems] = useState<OrderItem[]>([]);
@@ -193,12 +194,17 @@ export default function CustomerList() {
       const res = await fetch(`/api/orders/${order.id}`);
       if (!res.ok) throw new Error("Failed to fetch order");
       const data = await res.json();
-      const items: OrderItem[] = (data.order?.items || data.items || []).map((it: any) => ({
-        ...it,
-        itemType: it.itemType || it.item_type || "box",
-        quantity: it.quantity ?? 1,
-        price: it.price ?? 0,
-      }));
+      const rawItems = data.items || data.order?.items || [];
+      const items: OrderItem[] = rawItems.map((it: any) => {
+        let parsed: any = {};
+        try { parsed = typeof it.itemData === 'string' ? JSON.parse(it.itemData) : (it.itemData || {}); } catch {}
+        return {
+          ...parsed,
+          itemType: it.itemType || it.item_type || parsed.itemType || "box",
+          quantity: it.quantity ?? parsed.quantity ?? 1,
+          price: it.price ?? parsed.price ?? 0,
+        };
+      });
       setEditOrder({ ...order, items });
       setEditOrderItems(items);
     } catch (err: any) {
@@ -288,21 +294,23 @@ export default function CustomerList() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteCustomer) return;
-    setDeleteLoading(true);
+  const handleDeleteOrder = async () => {
+    if (!deleteOrderId) return;
+    setDeleteOrderLoading(true);
     try {
-      const res = await fetch(`/api/customers/${deleteCustomer.id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Failed to delete customer");
-      setCustomers((prev) => prev.filter((c) => c.id !== deleteCustomer.id));
-      toast({ title: "Customer deleted successfully" });
-      setDeleteCustomer(null);
+      const res = await fetch(`/api/orders/${deleteOrderId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete order");
+      setCustomers((prev) => prev.map((c) => ({
+        ...c,
+        orders: c.orders?.filter((o) => o.id !== deleteOrderId),
+        orderCount: c.orders ? c.orders.filter((o) => o.id !== deleteOrderId).length : c.orderCount,
+      })));
+      toast({ title: "Order deleted successfully" });
+      setDeleteOrderId(null);
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
-      setDeleteLoading(false);
+      setDeleteOrderLoading(false);
     }
   };
 
@@ -375,9 +383,6 @@ export default function CustomerList() {
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:bg-blue-50" onClick={() => openEdit(customer)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:bg-red-50" onClick={() => setDeleteCustomer(customer)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:bg-gray-100" onClick={() => handleExpand(customer)}>
                       {expandedId === customer.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </Button>
@@ -425,6 +430,10 @@ export default function CustomerList() {
                                 onClick={() => handlePrintOrder(order.id)}>
                                 <Printer className="h-3 w-3 mr-1" />
                                 {printingOrderId === order.id ? "Printing..." : "Print"}
+                              </Button>
+                              <Button variant="outline" size="sm" className="h-7 text-xs border-red-200 text-red-600 hover:bg-red-50"
+                                onClick={() => setDeleteOrderId(order.id)}>
+                                <Trash2 className="h-3 w-3 mr-1" />Delete
                               </Button>
                             </div>
                           </div>
@@ -531,6 +540,12 @@ export default function CustomerList() {
                             <SelectContent>{ENVELOPE_PRINT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                           </Select>
                         </div>
+                        {item.envelopePrintType === "Plain" && (
+                          <div className="space-y-1">
+                            <Label className="text-xs">Color</Label>
+                            <Input className="h-8 text-sm" value={item.envelopeColor || ""} onChange={(e) => updateItem(index, "envelopeColor", e.target.value)} />
+                          </div>
+                        )}
                         {item.envelopePrintType === "Print" && (
                           <div className="space-y-1">
                             <Label className="text-xs">Print Method</Label>
@@ -684,19 +699,19 @@ export default function CustomerList() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirm */}
-      <AlertDialog open={!!deleteCustomer} onOpenChange={() => setDeleteCustomer(null)}>
+      {/* Delete Order Confirm */}
+      <AlertDialog open={!!deleteOrderId} onOpenChange={() => setDeleteOrderId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Customer</AlertDialogTitle>
+            <AlertDialogTitle>Delete Order</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete <strong>{deleteCustomer?.name}</strong>? This cannot be undone.
+              Are you sure you want to delete Order #{deleteOrderId}? This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleteLoading} className="bg-red-600 hover:bg-red-700">
-              {deleteLoading ? "Deleting..." : "Delete"}
+            <AlertDialogAction onClick={handleDeleteOrder} disabled={deleteOrderLoading} className="bg-red-600 hover:bg-red-700">
+              {deleteOrderLoading ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -27,6 +27,7 @@ export const envelopeItemSchema = z.object({
   envelopeHeight: z.number().optional(),
   envelopeWidth: z.number().optional(),
   envelopePrintType: z.string().min(1, "Print type is required"),
+  envelopeColor: z.string().optional(),
   envelopePrintMethod: z.string().optional(),
   envelopeCustomPrint: z.string().optional(),
   quantity: z.number().int().positive("Quantity must be positive"),
@@ -50,9 +51,9 @@ export const bagItemSchema = z.object({
 });
 
 export const orderItemSchema = z.union([
-  boxItemSchema,
-  envelopeItemSchema,
-  bagItemSchema,
+  boxItemSchema.passthrough(),
+  envelopeItemSchema.passthrough(),
+  bagItemSchema.passthrough(),
 ]);
 
 export const createOrderSchema = z.object({

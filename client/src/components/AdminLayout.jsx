@@ -27,8 +27,7 @@ export default function AdminLayout({ children, onLogout }) {
       }`}>
         <div className="flex items-center h-16 px-6 border-b">
           <div>
-            <span className="text-base font-bold text-gray-900">Sri Padmavathi Sales</span>
-            <span className="text-xs text-gray-400 ml-1">™</span>
+            <span className="text-base font-bold text-gray-900">Order Form</span>
           </div>
         </div>
         

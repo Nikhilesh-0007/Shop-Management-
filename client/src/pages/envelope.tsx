@@ -175,7 +175,7 @@ export default function EnvelopeOrders() {
                     name="items.0.envelopeHeight"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Height (cm)</FormLabel>
+                        <FormLabel>Height (in)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -194,7 +194,7 @@ export default function EnvelopeOrders() {
                     name="items.0.envelopeWidth"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Width (cm)</FormLabel>
+                        <FormLabel>Width (in)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -234,6 +234,21 @@ export default function EnvelopeOrders() {
                   </FormItem>
                 )}
               />
+              {form.watch("items.0.envelopePrintType") === "Plain" && (
+                <FormField
+                  control={form.control}
+                  name="items.0.envelopeColor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Color</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter color" {...field} value={field.value || ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               {form.watch("items.0.envelopePrintType") === "Print" && (
                 <FormField
                   control={form.control}

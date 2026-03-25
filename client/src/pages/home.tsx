@@ -23,13 +23,14 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { createOrderSchema, type CreateOrderInput, type CreateOrderResponse, ItemType } from "@shared/schema";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const BOX_TYPES = ["Top-Bottom", "Magnet", "Ribbon"];
 const BOX_PRINT_TYPES = ["Plain", "Printed"];
 const ENVELOPE_SIZES = ["Big100", "3 1/2 * 4 1/2", "Small New", "3*4", "Other"];
 const ENVELOPE_PRINT_TYPES = ["Plain", "Print"];
 const ENVELOPE_PRINT_METHODS = ["Single Color", "Multi Color", "Other"];
-const BAG_SIZES = ["9*6*3", "D*C*B", "10*7*4", "10*8*4", "13*9*3", "12*10*4", "14*10*4", "11*16*4", "12*16*4", "16*12*4", "13*17*5", "Other"];
+const DEFAULT_BAG_SIZES = ["9*6*3", "D*C*B", "10*7*4", "10*8*4", "13*9*3", "12*10*4", "14*10*4", "11*16*4", "12*16*4", "16*12*4", "13*17*5", "Other"];
 const BAG_PRINT_TYPES = ["Plain", "Print"];
 const BAG_PRINT_METHODS = ["Single Color", "Multi Color"];
 const HANDLE_TYPES = ["Rope", "Ribbon", "None"];
@@ -40,6 +41,32 @@ const LAMINATION_TYPES = ["Gloss", "Matte"];
 export default function Home() {
   const { toast } = useToast();
   const [successData, setSuccessData] = useState<CreateOrderResponse | null>(null);
+  const [bagSizes, setBagSizes] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('customBagSizes');
+      if (saved) {
+        const custom = JSON.parse(saved) as string[];
+        const merged = [...DEFAULT_BAG_SIZES.filter(s => s !== "Other"), ...custom.filter(s => !DEFAULT_BAG_SIZES.includes(s)), "Other"];
+        return merged;
+      }
+    } catch {}
+    return DEFAULT_BAG_SIZES;
+  });
+  const [customSizeDialog, setCustomSizeDialog] = useState(false);
+  const [customSizeInput, setCustomSizeInput] = useState("");
+  const [pendingBagSizeIndex, setPendingBagSizeIndex] = useState<number | null>(null);
+
+  const addCustomBagSize = (newSize: string, itemIndex: number | null) => {
+    if (!newSize.trim()) return;
+    setBagSizes((prev) => {
+      if (prev.includes(newSize)) return prev;
+      const updated = [...prev.filter(s => s !== "Other"), newSize, "Other"];
+      localStorage.setItem('customBagSizes', JSON.stringify(updated.filter(s => !DEFAULT_BAG_SIZES.includes(s))));
+      return updated;
+    });
+    if (itemIndex !== null) form.setValue(`items.${itemIndex}.bagSize`, newSize);
+    setCustomSizeDialog(false);
+  };
 
   const form = useForm<CreateOrderInput>({
     resolver: zodResolver(createOrderSchema),
@@ -47,7 +74,7 @@ export default function Home() {
       customerName: "",
       phoneNumber: "",
       orderDate: new Date().toISOString().split("T")[0],
-      items: [{ itemType: "box", boxType: "", length: 1, breadth: 1, height: 1, printType: "", color: "", details: "", quantity: 1, price: 0 }],
+      items: [{ itemType: "box", boxType: "", length: undefined, breadth: undefined, height: undefined, printType: "", color: "", details: "", quantity: undefined, price: undefined }],
     },
   });
 
@@ -90,11 +117,11 @@ export default function Home() {
 
   const addItem = (type: "box" | "envelope" | "bag") => {
     if (type === "box") {
-      append({ itemType: "box", boxType: "", length: 1, breadth: 1, height: 1, printType: "", color: "", details: "", quantity: 1, price: 0 });
+      append({ itemType: "box", boxType: "", length: undefined, breadth: undefined, height: undefined, printType: "", color: "", details: "", quantity: undefined, price: undefined });
     } else if (type === "envelope") {
-      append({ itemType: "envelope", envelopeSize: "", envelopePrintType: "", envelopePrintMethod: "", envelopeCustomPrint: "", envelopeHeight: 1, envelopeWidth: 1, quantity: 1, price: 0 });
+      append({ itemType: "envelope", envelopeSize: "", envelopePrintType: "", envelopeColor: "", envelopePrintMethod: "", envelopeCustomPrint: "", envelopeHeight: undefined, envelopeWidth: undefined, quantity: undefined, price: undefined });
     } else {
-      append({ itemType: "bag", bagSize: "", bagHeight: 1, bagWidth: 1, bagGusset: 1, doreType: "", handleColor: "", customHandleColor: "", bagPrintType: "", printMethod: "", laminationType: "", quantity: 1, price: 0 });
+      append({ itemType: "bag", bagSize: "", bagHeight: undefined, bagWidth: undefined, bagGusset: undefined, doreType: "", handleColor: "", customHandleColor: "", bagPrintType: "", printMethod: "", laminationType: "", quantity: undefined, price: undefined });
     }
   };
 
@@ -244,14 +271,15 @@ export default function Home() {
                           name={`items.${index}.length`}
                           render={({ field: f }) => (
                             <FormItem>
-                              <FormLabel>Length (cm)</FormLabel>
+                              <FormLabel>Length (in)</FormLabel>
                               <FormControl>
                                 <Input
                                   type="number"
                                   min="0.1"
                                   step="0.1"
                                   {...f}
-                                  onChange={(e) => f.onChange(parseFloat(e.target.value) || 1)}
+                                  value={f.value ?? ''}
+                                  onChange={(e) => f.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -263,14 +291,15 @@ export default function Home() {
                           name={`items.${index}.breadth`}
                           render={({ field: f }) => (
                             <FormItem>
-                              <FormLabel>Breadth (cm)</FormLabel>
+                              <FormLabel>Breadth (in)</FormLabel>
                               <FormControl>
                                 <Input
                                   type="number"
                                   min="0.1"
                                   step="0.1"
                                   {...f}
-                                  onChange={(e) => f.onChange(parseFloat(e.target.value) || 1)}
+                                  value={f.value ?? ''}
+                                  onChange={(e) => f.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -282,14 +311,15 @@ export default function Home() {
                           name={`items.${index}.height`}
                           render={({ field: f }) => (
                             <FormItem>
-                              <FormLabel>Height (cm)</FormLabel>
+                              <FormLabel>Height (in)</FormLabel>
                               <FormControl>
                                 <Input
                                   type="number"
                                   min="0.1"
                                   step="0.1"
                                   {...f}
-                                  onChange={(e) => f.onChange(parseFloat(e.target.value) || 1)}
+                                  value={f.value ?? ''}
+                                  onChange={(e) => f.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -394,14 +424,15 @@ export default function Home() {
                               name={`items.${index}.envelopeHeight`}
                               render={({ field: f }) => (
                                 <FormItem>
-                                  <FormLabel>Height (cm)</FormLabel>
+                                  <FormLabel>Height (in)</FormLabel>
                                   <FormControl>
                                     <Input
                                       type="number"
                                       min="0.1"
                                       step="0.1"
                                       {...f}
-                                      onChange={(e) => f.onChange(parseFloat(e.target.value) || 1)}
+                                      value={f.value ?? ''}
+                                      onChange={(e) => f.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -413,14 +444,15 @@ export default function Home() {
                               name={`items.${index}.envelopeWidth`}
                               render={({ field: f }) => (
                                 <FormItem>
-                                  <FormLabel>Width (cm)</FormLabel>
+                                  <FormLabel>Width (in)</FormLabel>
                                   <FormControl>
                                     <Input
                                       type="number"
                                       min="0.1"
                                       step="0.1"
                                       {...f}
-                                      onChange={(e) => f.onChange(parseFloat(e.target.value) || 1)}
+                                      value={f.value ?? ''}
+                                      onChange={(e) => f.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -453,6 +485,21 @@ export default function Home() {
                             </FormItem>
                           )}
                         />
+                        {form.watch(`items.${index}.envelopePrintType`) === "Plain" && (
+                          <FormField
+                            control={form.control}
+                            name={`items.${index}.envelopeColor`}
+                            render={({ field: f }) => (
+                              <FormItem>
+                                <FormLabel>Color</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Enter color" {...f} value={f.value || ""} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
                         {form.watch(`items.${index}.envelopePrintType`) === "Print" && (
                           <FormField
                             control={form.control}
@@ -509,18 +556,29 @@ export default function Home() {
                           render={({ field: f }) => (
                             <FormItem>
                               <FormLabel>Bag Size</FormLabel>
-                              <Select onValueChange={f.onChange} value={f.value}>
+                              <Select
+                                value={f.value}
+                                onValueChange={(v) => {
+                                  if (v === "__custom__") {
+                                    setPendingBagSizeIndex(index);
+                                    setCustomSizeInput("");
+                                    setCustomSizeDialog(true);
+                                  } else {
+                                    f.onChange(v);
+                                  }
+                                }}
+                              >
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select size" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {BAG_SIZES.map((size) => (
-                                    <SelectItem key={size} value={size}>
-                                      {size}
-                                    </SelectItem>
+                                  {bagSizes.filter(s => s !== "Other").map((size) => (
+                                    <SelectItem key={size} value={size}>{size}</SelectItem>
                                   ))}
+                                  <SelectItem value="__custom__">+ Add Custom Size</SelectItem>
+                                  <SelectItem value="Other">Other (enter dimensions)</SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormMessage />
@@ -534,14 +592,15 @@ export default function Home() {
                               name={`items.${index}.bagHeight`}
                               render={({ field: f }) => (
                                 <FormItem>
-                                  <FormLabel>Height (cm)</FormLabel>
+                                  <FormLabel>Height (in)</FormLabel>
                                   <FormControl>
                                     <Input
                                       type="number"
                                       min="0.1"
                                       step="0.1"
                                       {...f}
-                                      onChange={(e) => f.onChange(parseFloat(e.target.value) || 1)}
+                                      value={f.value ?? ''}
+                                      onChange={(e) => f.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -553,14 +612,15 @@ export default function Home() {
                               name={`items.${index}.bagWidth`}
                               render={({ field: f }) => (
                                 <FormItem>
-                                  <FormLabel>Width (cm)</FormLabel>
+                                  <FormLabel>Width (in)</FormLabel>
                                   <FormControl>
                                     <Input
                                       type="number"
                                       min="0.1"
                                       step="0.1"
                                       {...f}
-                                      onChange={(e) => f.onChange(parseFloat(e.target.value) || 1)}
+                                      value={f.value ?? ''}
+                                      onChange={(e) => f.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -572,14 +632,15 @@ export default function Home() {
                               name={`items.${index}.bagGusset`}
                               render={({ field: f }) => (
                                 <FormItem>
-                                  <FormLabel>Gusset (cm)</FormLabel>
+                                  <FormLabel>Gusset (in)</FormLabel>
                                   <FormControl>
                                     <Input
                                       type="number"
                                       min="0.1"
                                       step="0.1"
                                       {...f}
-                                      onChange={(e) => f.onChange(parseFloat(e.target.value) || 1)}
+                                      value={f.value ?? ''}
+                                      onChange={(e) => f.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -785,7 +846,8 @@ export default function Home() {
                               type="number"
                               min="1"
                               {...f}
-                              onChange={(e) => f.onChange(parseInt(e.target.value) || 1)}
+                              value={f.value ?? ''}
+                              onChange={(e) => f.onChange(e.target.value === '' ? undefined : parseInt(e.target.value))}
                             />
                           </FormControl>
                           <FormMessage />
@@ -804,7 +866,8 @@ export default function Home() {
                               min="0"
                               step="0.01"
                               {...f}
-                              onChange={(e) => f.onChange(parseFloat(e.target.value) || 0)}
+                              value={f.value ?? ''}
+                              onChange={(e) => f.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
                             />
                           </FormControl>
                           <FormMessage />
@@ -847,6 +910,27 @@ export default function Home() {
           </div>
         </form>
       </Form>
+
+      {/* Custom Bag Size Dialog */}
+      <Dialog open={customSizeDialog} onOpenChange={setCustomSizeDialog}>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Add Custom Bag Size</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <Input
+              placeholder="e.g. 15*12*5"
+              value={customSizeInput}
+              onChange={(e) => setCustomSizeInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomBagSize(customSizeInput.trim(), pendingBagSizeIndex); } }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCustomSizeDialog(false)}>Cancel</Button>
+            <Button onClick={() => addCustomBagSize(customSizeInput.trim(), pendingBagSizeIndex)}>Add Size</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

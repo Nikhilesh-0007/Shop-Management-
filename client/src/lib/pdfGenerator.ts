@@ -9,7 +9,7 @@ export const generateOrderPDF = (orderData: CreateOrderInput, orderId: number): 
   // Header
   pdf.setFontSize(20);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('PRODUCTION ORDER', pageWidth / 2, 25, { align: 'center' });
+  pdf.text('ORDER FORM', pageWidth / 2, 25, { align: 'center' });
   
   // Order details
   pdf.setFontSize(12);

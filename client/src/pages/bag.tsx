@@ -179,7 +179,7 @@ export default function BagOrders() {
                     name="items.0.bagHeight"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Height (cm)</FormLabel>
+                        <FormLabel>Height (in)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -198,7 +198,7 @@ export default function BagOrders() {
                     name="items.0.bagWidth"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Width (cm)</FormLabel>
+                        <FormLabel>Width (in)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -217,7 +217,7 @@ export default function BagOrders() {
                     name="items.0.bagGusset"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Gusset (cm)</FormLabel>
+                        <FormLabel>Gusset (in)</FormLabel>
                         <FormControl>
                           <Input
                             type="number"

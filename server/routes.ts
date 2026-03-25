@@ -74,7 +74,18 @@ export async function registerRoutes(
     }
   });
 
-app.get("/api/customers", async (req: Request, res: Response) => {
+  app.delete("/api/orders/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id as string);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid order ID" });
+      await database.deleteOrder(id);
+      return res.json({ success: true });
+    } catch (error) {
+      return res.status(500).json({ success: false, message: error instanceof Error ? error.message : "Internal server error" });
+    }
+  });
+
+  app.get("/api/customers", async (req: Request, res: Response) => {
     try {
       const customers = await database.getAllCustomers();
       return res.json({ success: true, customers });
