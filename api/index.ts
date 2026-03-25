@@ -131,7 +131,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === 'GET' && path === '/customers') {
       const { data, error } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      return res.json({ success: true, customers: data });
+      const customers = (data || []).map((row: any) => ({
+        id: row.id,
+        name: row.name,
+        phone: row.phone,
+        createdAt: row.created_at,
+      }));
+      return res.json({ success: true, customers });
     }
 
     // PUT /customers/:id
@@ -147,7 +153,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const id = parseInt(path.split('/')[2]);
       const { data, error } = await supabase.from('orders').select('*').eq('customer_id', id).order('created_at', { ascending: false });
       if (error) throw error;
-      return res.json({ success: true, orders: data });
+      const orders = (data || []).map((row: any) => ({
+        id: row.id,
+        customerId: row.customer_id,
+        orderDate: row.order_date,
+        totalAmount: parseFloat(row.total_amount),
+        createdAt: row.created_at,
+      }));
+      return res.json({ success: true, orders });
     }
 
     // POST /create-order
@@ -228,7 +241,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === 'GET' && path === '/orders') {
       const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      return res.json({ success: true, orders: data });
+      const orders = (data || []).map((row: any) => ({
+        id: row.id,
+        customerId: row.customer_id,
+        orderDate: row.order_date,
+        totalAmount: parseFloat(row.total_amount),
+        createdAt: row.created_at,
+      }));
+      return res.json({ success: true, orders });
     }
 
     return res.status(404).json({ message: "Route not found", path, method });
