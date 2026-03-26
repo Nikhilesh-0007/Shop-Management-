@@ -17,6 +17,35 @@ const COL = {
   total:   { x: ML + 420, w: 75 },
 };
 
+function fmt(v: number): string {
+  return v % 1 === 0 ? v.toString() : v.toFixed(2);
+}
+
+function calcBoxSizes(L: number, B: number, H: number, boxType: string) {
+  if (boxType === 'Top-Bottom') {
+    return {
+      type: 'Top/Bottom',
+      sections: [
+        { label: 'Board Size', values: [`${fmt(L + H*2)} x ${fmt(B + H*2)}`, `${fmt(L + 2.25)} x ${fmt(B + 2.25)}`] },
+        { label: 'Inner Paper', values: [`${fmt(L + H*2 - 0.5)} x ${fmt(B + H*2 - 0.5)}`, `${fmt(L + 2.25 - 0.5)} x ${fmt(B + 2.25 - 0.5)}`] },
+        { label: 'Output Paper', values: [`${fmt(H + 2)} x ${fmt(L + B + 2)}`, `${fmt(H + 2)} x ${fmt(L + B)}`] },
+        { label: 'Bottom Paper', values: [`${fmt(L - 0.25)} x ${fmt(B - 0.25)}`] },
+        { label: 'Top Paper', values: [`${fmt(L + 2.25 + 1.75)} x ${fmt(B + 2.25 + 1.75)}`] },
+      ]
+    };
+  } else {
+    return {
+      type: 'Magnet/Rope',
+      sections: [
+        { label: 'Board Size', values: [`${fmt(L + H*2)} x ${fmt(B + H*2)}`, `${fmt(L + 0.5)} x ${fmt(B)}`, `${fmt(L + 0.5)} x ${fmt(H)}`, `${fmt(L + 0.5)} x ${fmt(H - 0.2)}`] },
+        { label: 'Outer Paper', values: [`${fmt(H + 2)} x ${fmt(L + B + 2)}`, `${fmt(H + 2)} x ${fmt(L + B)}`] },
+        { label: 'Inner Paper', values: [`${fmt(L + H*2 - 0.5)} x ${fmt(B + H*2 - 0.5)}`] },
+        { label: 'Pad Paper', values: [`${fmt(L + 2.5)} x ${fmt(B*2 + H*2 + 3)}`, `${fmt(L + 0.3)} x ${fmt(B + H + 1.5)}`] },
+      ]
+    };
+  }
+}
+
 function drawHRule(page: any, y: number, thickness = 1) {
   page.drawLine({
     start: { x: ML, y },
@@ -169,6 +198,42 @@ async function generateUnifiedProductionPdf(
   const totalText = `TOTAL:   Rs. ${totalAmount.toFixed(2)}`;
   const totalW = bold.widthOfTextAtSize(totalText, 13);
   page.drawText(totalText, { x: W - MR - totalW, y, size: 13, font: bold, color: rgb(0, 0, 0) });
+
+  // ── Cutting Sizes for Box items ────────────────────────
+  const boxItems = items.filter(i => i.itemType === 'box');
+  if (boxItems.length > 0) {
+    y -= 30;
+    drawHRule(page, y, 1);
+    y -= 18;
+    page.drawText("CUTTING SIZES", { x: ML, y, size: 14, font: bold, color: rgb(0, 0, 0) });
+    y -= 18;
+
+    boxItems.forEach((item, idx) => {
+      let data: any = {};
+      try { data = JSON.parse(item.itemData); } catch {}
+      const L = parseFloat(data.length) || 0;
+      const B = parseFloat(data.breadth) || 0;
+      const Ht = parseFloat(data.height) || 0;
+      const boxType = data.boxType || 'Top-Bottom';
+
+      if (!L || !B || !Ht) return;
+
+      const calc = calcBoxSizes(L, B, Ht, boxType);
+
+      page.drawText(`Box #${idx + 1} (${calc.type}) — L:${L} x B:${B} x H:${Ht}`, {
+        x: ML, y, size: 10, font: bold, color: rgb(0, 0, 0)
+      });
+      y -= 14;
+
+      calc.sections.forEach(section => {
+        page.drawText(`${section.label}:`, { x: ML + 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
+        const valText = section.values.join('   |   ');
+        page.drawText(valText, { x: ML + 100, y, size: 9, font: regular, color: rgb(0, 0, 0) });
+        y -= 13;
+      });
+      y -= 6;
+    });
+  }
 
   return await pdfDoc.save();
 }
