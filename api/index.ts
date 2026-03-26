@@ -43,9 +43,8 @@ const COL = {
   num:     { x: ML },
   type:    { x: ML + 40 },
   details: { x: ML + 120 },
-  qty:     { x: ML + 300 },
-  price:   { x: ML + 345 },
-  total:   { x: ML + 420 },
+  qty:     { x: ML + 360 },
+  price:   { x: ML + 410 },
 };
 
 function drawHRule(page: any, y: number, thickness = 1) {
@@ -110,7 +109,7 @@ async function generatePdf(order: any, customer: any, items: any[]): Promise<Uin
   y -= 16;
 
   const rowH = 18;
-  [["S.No", COL.num], ["Type", COL.type], ["Details", COL.details], ["Qty", COL.qty], ["Price", COL.price], ["Total", COL.total]].forEach(([label, col]: any) => {
+  ["S.No", COL.num], ["Type", COL.type], ["Details", COL.details], ["Qty", COL.qty], ["Price", COL.price]].forEach(([label, col]: any) => {
     page.drawText(label, { x: col.x + 3, y: y - 10, size: 10, font: bold, color: rgb(0,0,0) });
   });
   y -= rowH + 4;
@@ -136,14 +135,10 @@ async function generatePdf(order: any, customer: any, items: any[]): Promise<Uin
     });
     page.drawText(`${qty}`, { x: COL.qty.x + 3, y: rowY, size: 10, font: regular, color: rgb(0,0,0) });
     page.drawText(`Rs. ${price.toFixed(2)}`, { x: COL.price.x + 3, y: rowY, size: 10, font: regular, color: rgb(0,0,0) });
-    page.drawText(`Rs. ${itemTotal.toFixed(2)}`, { x: COL.total.x + 3, y: rowY, size: 10, font: bold, color: rgb(0,0,0) });
     y -= cellH + 4;
   });
 
   y -= 6; drawHRule(page, y, 0.8); y -= 20;
-  const totalText = `TOTAL:   Rs. ${totalAmount.toFixed(2)}`;
-  const totalW = bold.widthOfTextAtSize(totalText, 13);
-  page.drawText(totalText, { x: W - MR - totalW, y, size: 13, font: bold, color: rgb(0,0,0) });
 
   // Cutting sizes for box items
   const boxItems = items.filter((i: any) => (i.item_type || i.itemType) === 'box');
