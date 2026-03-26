@@ -109,7 +109,7 @@ async function generatePdf(order: any, customer: any, items: any[]): Promise<Uin
   y -= 16;
 
   const rowH = 18;
-  ["S.No", COL.num], ["Type", COL.type], ["Details", COL.details], ["Qty", COL.qty], ["Price", COL.price]].forEach(([label, col]: any) => {
+  [["S.No", COL.num], ["Type", COL.type], ["Details", COL.details], ["Qty", COL.qty], ["Price", COL.price]].forEach(([label, col]: any) => {
     page.drawText(label, { x: col.x + 3, y: y - 10, size: 10, font: bold, color: rgb(0,0,0) });
   });
   y -= rowH + 4;

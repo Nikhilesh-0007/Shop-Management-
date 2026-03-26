@@ -234,7 +234,7 @@ export default function CustomerList() {
       const res = await fetch(`/api/orders/${editOrder.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: editOrderItems }),
+        body: JSON.stringify({ items: editOrderItems, orderDate: editOrder.orderDate }),
       });
       if (!res.ok) throw new Error("Failed to update order");
       const totalAmount = editOrderItems.reduce((s, it) => s + it.price * it.quantity, 0);
