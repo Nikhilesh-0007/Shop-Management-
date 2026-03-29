@@ -41,7 +41,6 @@ import {
   Package,
   Mail,
   ShoppingBag,
-  IndianRupee,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -108,7 +107,6 @@ interface Customer {
   phone: string;
   createdAt: string;
   orderCount?: number;
-  totalSpent?: number;
   orders?: Order[];
 }
 
@@ -160,7 +158,6 @@ export default function CustomerList() {
                 ...c,
                 orders,
                 orderCount: orders.length,
-                totalSpent: orders.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0),
               }
             : c
         )
@@ -394,9 +391,6 @@ export default function CustomerList() {
                   <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{new Date(customer.createdAt).toLocaleDateString()}</span>
                   {customer.orderCount !== undefined && (
                     <span className="flex items-center gap-1 text-blue-600 font-medium"><Package className="h-3.5 w-3.5" />{customer.orderCount} orders</span>
-                  )}
-                  {customer.totalSpent !== undefined && (
-                    <span className="flex items-center gap-1 text-green-600 font-medium"><IndianRupee className="h-3.5 w-3.5" />{(Number(customer.totalSpent) || 0).toFixed(2)} spent</span>
                   )}
                 </div>
 
