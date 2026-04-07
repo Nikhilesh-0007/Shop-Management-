@@ -174,24 +174,26 @@ async function generateUnifiedProductionPdf(
       if (!L || !B || !Ht) return;
 
       const calc = calcBoxSizes(L, B, Ht, data.boxType || 'Top-Bottom');
+      const qty = item.quantity || 0;
       page.drawText(`Box #${idx + 1} (${calc.type}) — L:${L} x B:${B} x H:${Ht}`, { x: ML, y, size: 10, font: bold, color: rgb(0, 0, 0) });
       y -= 16;
 
       const boardSection = calc.sections.find(s => s.label === 'Board Size')!;
       const paperSections = calc.sections.filter(s => s.label !== 'Board Size');
       const boxW = CONTENT_W;
-      const rH = 16;
+      const rH = 18;
       const pad = 5;
+      const fontSize = 11;
 
       // ── Box 1: Board Size ──
       const boardBoxH = rH + boardSection.values.length * rH;
       // header
       page.drawRectangle({ x: ML, y: y - rH, width: boxW, height: rH, borderColor: rgb(0,0,0), borderWidth: 0.5, color: rgb(1,1,1) });
-      page.drawText("Board Size", { x: ML + 4, y: y - rH + pad, size: 9, font: bold, color: rgb(0,0,0) });
+      page.drawText("Board Size", { x: ML + 4, y: y - rH + pad, size: fontSize, font: bold, color: rgb(0,0,0) });
       // values area border
       page.drawRectangle({ x: ML, y: y - boardBoxH, width: boxW, height: boardSection.values.length * rH, borderColor: rgb(0,0,0), borderWidth: 0.5, color: rgb(1,1,1) });
       boardSection.values.forEach((val, ri) => {
-        page.drawText(val, { x: ML + 4, y: y - rH - ri * rH - rH + pad, size: 9, font: regular, color: rgb(0,0,0) });
+        page.drawText(`${val}  (${qty})`, { x: ML + 4, y: y - rH - ri * rH - rH + pad, size: fontSize, font: regular, color: rgb(0,0,0) });
       });
       y -= boardBoxH + 12;
 
@@ -201,18 +203,18 @@ async function generateUnifiedProductionPdf(
       const paperBoxH = rH * 2 + paperSections.length * rH;
       page.drawRectangle({ x: ML, y: y - paperBoxH, width: boxW, height: paperBoxH, borderColor: rgb(0,0,0), borderWidth: 0.5, color: rgb(1,1,1) });
       // title row
-      drawTableCell(page, ML, y, boxW, rH, "Paper Sizes", bold, 9, true);
+      drawTableCell(page, ML, y, boxW, rH, "Paper Sizes", bold, fontSize, true);
       y -= rH;
       // column headers
-      drawTableCell(page, ML, y, col1W, rH, "Paper Category", bold, 9, true);
-      drawTableCell(page, ML + col1W, y, col2W, rH, "Value", bold, 9, true);
+      drawTableCell(page, ML, y, col1W, rH, "Paper Category", bold, fontSize, true);
+      drawTableCell(page, ML + col1W, y, col2W, rH, "Value", bold, fontSize, true);
       y -= rH;
       // vertical divider for data rows
       page.drawLine({ start: { x: ML + col1W, y }, end: { x: ML + col1W, y: y - paperSections.length * rH }, thickness: 0.5, color: rgb(0,0,0) });
       // data rows — text only, no horizontal lines
       paperSections.forEach(sec => {
-        page.drawText(sec.label, { x: ML + 4, y: y - rH + pad, size: 9, font: regular, color: rgb(0,0,0), maxWidth: col1W - 8 });
-        page.drawText(sec.values.join('  |  '), { x: ML + col1W + 4, y: y - rH + pad, size: 9, font: regular, color: rgb(0,0,0), maxWidth: col2W - 8 });
+        page.drawText(sec.label, { x: ML + 4, y: y - rH + pad, size: fontSize, font: regular, color: rgb(0,0,0), maxWidth: col1W - 8 });
+        page.drawText(sec.values.join('  |  '), { x: ML + col1W + 4, y: y - rH + pad, size: fontSize, font: regular, color: rgb(0,0,0), maxWidth: col2W - 8 });
         y -= rH;
       });
       y -= 12;
