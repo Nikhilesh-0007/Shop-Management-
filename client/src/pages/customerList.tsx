@@ -411,7 +411,7 @@ export default function CustomerList() {
                             <div>
                               <p className="text-sm font-medium text-gray-800">Order #{order.id}</p>
                               <p className="text-xs text-gray-500">
-                                {new Date(order.orderDate).toLocaleDateString()} · ₹{(Number(order.totalAmount) || 0).toFixed(2)}
+                                {new Date(order.orderDate).toLocaleDateString()}
                               </p>
                             </div>
                             <div className="flex items-center gap-1">
