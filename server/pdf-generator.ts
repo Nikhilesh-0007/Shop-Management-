@@ -193,7 +193,7 @@ async function generateUnifiedProductionPdf(
       // values area border
       page.drawRectangle({ x: ML, y: y - boardBoxH, width: boxW, height: boardSection.values.length * rH, borderColor: rgb(0,0,0), borderWidth: 0.5, color: rgb(1,1,1) });
       boardSection.values.forEach((val, ri) => {
-        page.drawText(`${val}  (${qty})`, { x: ML + 4, y: y - rH - ri * rH - rH + pad, size: fontSize, font: regular, color: rgb(0,0,0) });
+        const displayQty = (data.boxType !== 'Top-Bottom' && ri === 1) ? qty * 2 + 2 : qty + 2; page.drawText(`${val}  (${displayQty})`, { x: ML + 4, y: y - rH - ri * rH - rH + pad, size: fontSize, font: regular, color: rgb(0,0,0) });
       });
       y -= boardBoxH + 12;
 

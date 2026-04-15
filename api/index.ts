@@ -175,7 +175,7 @@ async function generatePdf(order: any, customer: any, items: any[]): Promise<Uin
       page.drawText("Board Size", { x: ML + 4, y: y - rH + pad, size: 11, font: bold, color: rgb(0,0,0) });
       page.drawRectangle({ x: ML, y: y - boardBoxH, width: boxW, height: boardSection.values.length * rH, borderColor: rgb(0,0,0), borderWidth: 0.5, color: rgb(1,1,1) });
       boardSection.values.forEach((val: string, ri: number) => {
-        const itemQty = item.quantity || 0; page.drawText(`${val}  (${itemQty})`, { x: ML + 4, y: y - rH - ri * rH - rH + pad, size: 11, font: regular, color: rgb(0,0,0) });
+        const itemQty = item.quantity || 0; const displayQty = (data.boxType !== 'Top-Bottom' && ri === 1) ? itemQty * 2 + 2 : itemQty + 2; page.drawText(`${val}  (${displayQty})`, { x: ML + 4, y: y - rH - ri * rH - rH + pad, size: 11, font: regular, color: rgb(0,0,0) });
       });
       y -= boardBoxH + 12;
 
